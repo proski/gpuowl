@@ -292,7 +292,11 @@ cl_queue makeQueue(cl_device_id d, cl_context c, bool isProfile) {
   props[1] = isProfile ? CL_QUEUE_PROFILING_ENABLE : 0;
   // CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE not supported on ROCm 6.1 or earlier
 
+#ifdef __APPLE__
+  cl_queue q = clCreateCommandQueueWithPropertiesAPPLE(c, d, props, &err);
+#else
   cl_queue q = clCreateCommandQueueWithProperties(c, d, props, &err);
+#endif
   CHECK2(err, "clCreateCommandQueue");
   return q;
 }
@@ -305,6 +309,7 @@ EventHolder run(cl_queue queue, cl_kernel kernel,
                 vector<cl_event>&& waits,
                 const string &name, bool genEvent) {
   cl_event event{};
+  log("groupSize: %zu, workSize: %zu, genEvent: %u\n", groupSize, workSize, genEvent);
   CHECK2(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &workSize, &groupSize,
                                 waits.size(), waits.empty() ? 0 : waits.data(), genEvent ? &event : nullptr),
          name.c_str());
@@ -361,6 +366,17 @@ int getKernelNumArgs(cl_kernel k) {
 int getWorkGroupSize(cl_kernel k, cl_device_id device, const char *name) {
   size_t size[3];
   CHECK2(clGetKernelWorkGroupInfo(k, device, CL_KERNEL_COMPILE_WORK_GROUP_SIZE, sizeof(size), &size, NULL), name);
+  log("WorkGroupSize = (%zu, %zu, %zu)\n", size[0], size[1], size[2]);
+
+  unsigned maxDimensions;
+  GET_INFO(device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, maxDimensions);
+  size_t maxGroupSize;
+  GET_INFO(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, maxGroupSize);
+  size_t maxSize[3];
+  GET_INFO(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, maxSize);
+  log("maxDimensions = %u, maxGroupSize = %zu, maxWorkItemSizes = (%zu, %zu, %zu)\n",
+      maxDimensions, maxGroupSize, maxSize[0], maxSize[1], maxSize[2]);
+
   return size[0];
 }
 
