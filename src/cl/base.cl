@@ -149,6 +149,7 @@ void write(u32 WG, u32 N, T2 *u, global T2 *out, u32 base) {
   for (u32 i = 0; i < N; ++i) { out[base + i * WG + (u32) get_local_id(0)] = u[i]; }
 }
 
+T2 U2(T a, T b);
 T2 U2(T a, T b) { return (T2) (a, b); }
 
 void bar() {

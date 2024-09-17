@@ -5,6 +5,7 @@
 #include "math.cl"
 
 // N represents a full circle, so N/2 is pi radians and N/8 is pi/4 radians.
+double2 reducedCosSin(int k, u32 N);
 double2 reducedCosSin(int k, u32 N) {
   assert(k >= -N/8 && k <= N/8);
   const double S[] = TRIG_SIN;
@@ -62,6 +63,7 @@ double2 reducedCosSin(int k, u32 N) {
 
 // Returns e^(-i * tau * k / n), (tau == 2*pi represents a full circle). So k/n is the ratio of a full circle.
 // Inverse trigonometric direction is chosen as an FFT convention.
+double2 slowTrig_N(u32 k, u32 kBound);
 double2 slowTrig_N(u32 k, u32 kBound)   {
   u32 n = ND;
   assert(n % 8 == 0);
